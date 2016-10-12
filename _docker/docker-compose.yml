@@ -17,7 +17,6 @@ services:
       - api3
 
   api1:
-    container_name: api1
     build:
       context: ../
       dockerfile: _docker/Dockerfile
@@ -28,7 +27,7 @@ services:
       rdb:
         aliases:
           - api1.api
-    command: "pm2 start --no-daemon ./app/index.js -i max --watch"
+    command: "./node_modules/.bin/pm2-docker /src/pm2process.yml"
     environment:
       RETHINK_HOST: rdb1.rdb
     depends_on:
@@ -37,7 +36,6 @@ services:
       - rdb3
 
   api2:
-    container_name: api2
     build:
       context: ../
       dockerfile: _docker/Dockerfile
@@ -48,7 +46,7 @@ services:
       rdb:
         aliases:
           - api2.api
-    command: "pm2 start --no-daemon ./app/index.js -i max --watch"
+    command: "./node_modules/.bin/pm2-docker /src/pm2process.yml"
     environment:
       RETHINK_HOST: rdb2.rdb
     depends_on:
@@ -57,7 +55,6 @@ services:
       - rdb3
 
   api3:
-    container_name: api3
     build:
       context: ../
       dockerfile: _docker/Dockerfile
@@ -68,7 +65,7 @@ services:
       rdb:
         aliases:
           - api3.api
-    command: "pm2 start --no-daemon ./app/index.js -i max --watch"
+    command: "./node_modules/.bin/pm2-docker /src/pm2process.yml"
     environment:
       RETHINK_HOST: rdb3.rdb
     depends_on:

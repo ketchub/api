@@ -1,0 +1,5 @@
+script: './app/index.js'
+exec_mode: 'cluster'
+instances: -1
+watch: true
+ignore_watch: ["node_modules"]

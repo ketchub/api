@@ -13,6 +13,7 @@
   "dependencies": {
     "rethinkdb": "2.3.3",
     "express": "4.14.0",
-    "body-parser": "1.15.2"
+    "body-parser": "1.15.2",
+    "pm2": "2.0.18"
   }
 }
