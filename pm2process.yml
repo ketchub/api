@@ -1,5 +1,5 @@
 script: './app/index.js'
 exec_mode: 'cluster'
 instances: -1
-watch: true
+watch: ["./app/*.js"]
 ignore_watch: ["node_modules"]

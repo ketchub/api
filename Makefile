@@ -1,7 +1,7 @@
-export APP_NAME = catchalong-api
+export COMPOSE_PROJECT_NAME = catchalongapi
 
 # Settings for this Makefile
-SHELL = /bin/bash
+# SHELL = /bin/bash
 
 dev: dev-setup
 	docker-compose -f _docker/docker-compose.yml up -d
