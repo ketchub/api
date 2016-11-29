@@ -5,8 +5,11 @@ services:
     image: nginx:1.11.4-alpine
     ports:
       - "3000:80"
+      - "4434:443"
     volumes:
-      - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - "./conf/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./self-signed.dev.cert:/etc/ssl/certs/self-signed.dev.cert"
+      - "./self-signed.dev.key:/etc/ssl/private/self-signed.dev.key"
     networks:
       - apinet
     depends_on:
