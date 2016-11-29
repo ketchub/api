@@ -1,33 +1,48 @@
+const _       = require('lodash');
+const async   = require('async');
 const router  = require('express').Router();
 const r       = require('rethinkdb');
 const getConn = r.connect({
-  db: 'test',
+  db: process.env.NODE_ENV,
   host: process.env.RETHINK_HOST,
   port: 28015
 });
 
+console.log(`\n\n RUNNING WITH NODE_ENV: ${process.env.NODE_ENV} \n\n`)
+
 module.exports = router;
 
-router.get('/test', (req, res, next) => {
-  // console.log(`Via ${process.env.RETHINK_HOST}`);
-  // res.json({
-  //   yea: 'sure'
-  // });
+router.post('/search', (req, res, next) => {
+  res.json({ok:'sure'});
+});
 
+// router.post('/make-request', (req, res, next) => {
+//   getConn.then((conn) => {
+//     r.table('rides').insert({
+//       startPoint: r.point(+(req.body.startLng), +(req.body.startLat)),
+//       endPoint: r.point(+(req.body.endLng), +(req.body.endLat)),
+//       wouldDrive: stringToBool(req.body.wouldDrive),
+//       flexible: stringToBool(req.body.flexible),
+//       polypath: req.body.polypath
+//     }).run(conn, (err, resp) => {
+//       res.json({err, resp});
+//     });
+//   });
+// });
+
+router.get('/recent', (req, res, next) => {
   getConn.then((conn) => {
-    r.table('lorem').insert({
-      name: 'someone',
-      testing: 'indiceX'
-    }).run(conn, (err, result) => {
-      if (err) {
-        process.stdout.write(`Error on write: ${err.message}\n`);
-        return res.json({ok:false, message: err.message});
-      }
-      console.log(`Request handled via ${process.env.RETHINK_HOST}`);
-      res.json({ok:true, result:result});
+    r.table('rides').limit(10).run(conn, (err, cursor) => {
+      if (err) { return res.json({err}); }
+      cursor.toArray((err, results) => {
+        if (err) { return res.json({err}); }
+        res.json(results);
+      });
     });
-  }).error((err) => {
-    process.stdout.write(`Error GENERIC: ${err.message}\n`);
-    res.json({ok:false, message: err.message});
   });
 });
+
+
+function stringToBool(v) {
+  return !!(v === "true" || v === true);
+}

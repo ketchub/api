@@ -9,11 +9,16 @@
   },
   "author": "",
   "license": "ISC",
-  "devDependencies": {},
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "3.1.2"
+  },
   "dependencies": {
-    "rethinkdb": "2.3.3",
-    "express": "4.14.0",
+    "async": "^2.1.4",
     "body-parser": "1.15.2",
-    "pm2": "2.0.18"
+    "express": "4.14.0",
+    "lodash": "4.16.4",
+    "pm2": "2.0.18",
+    "rethinkdb": "2.3.3"
   }
 }

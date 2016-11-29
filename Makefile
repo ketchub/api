@@ -7,7 +7,7 @@ SHELL = /bin/bash
 ################################################################################
 # Development related
 ################################################################################
-# dev: export NODE_ENV = development
+dev: export NODE_ENV = development
 dev: dev-setup
 	docker-compose -f _docker/docker-compose.yml up -d
 	docker-compose -f _docker/docker-compose.yml logs -f; true && \
@@ -43,9 +43,16 @@ test: dev-setup
 	docker-compose -f _docker/docker-compose.yml up -d
 	docker exec -it catchalongapi_apitest_1 ./node_modules/.bin/mocha
 
-nginx:
-	docker-compose -f _docker/docker-compose.yml run proxyway
-	# docker-compose -f _docker/docker-compose.yml run --no-deps proxyway
+## Exec a bin script in ONE of the containers
+dev-setupdb: export NODE_ENV = development
+dev-setupdb:
+	docker exec -it catchalongapi_api1_1 env TERM=xterm node ./bin/db.js
+	docker exec -it catchalongapi_api1_1 env TERM=xterm node ./bin/db-seeder.js
 
-nginx-logs:
-	docker-compose -f _docker/docker-compose.yml logs -f
+
+# nginx:
+# 	docker-compose -f _docker/docker-compose.yml run proxyway
+# 	# docker-compose -f _docker/docker-compose.yml run --no-deps proxyway
+#
+# nginx-logs:
+# 	docker-compose -f _docker/docker-compose.yml logs -f
