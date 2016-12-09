@@ -8,27 +8,52 @@ const getConn = r.connect({
   port: 28015
 });
 
-console.log(`\n\n RUNNING WITH NODE_ENV: ${process.env.NODE_ENV} \n\n`)
+console.log(`\n\n RUNNING WITH NODE_ENV: ${process.env.NODE_ENV} \n\n`);
 
 module.exports = router;
 
 router.post('/search', (req, res, next) => {
-  res.json({ok:'sure'});
+  res.json(req.body);
+  // const query = req.body;
+  // getConn.then((conn) => {
+  //   r.table('rides').insert({
+  //     flexible: query.flexible,
+  //     wouldDrive: query.wouldDrive,
+  //     origin: r.point(+(query.origin.lng), +(query.origin.lat)),
+  //     destination: r.point(+(query.destination.lng), +(query.destination.lat)),
+  //     encodedPolyline: query.encodedPolyline,
+  //     originZip: query.originZip,
+  //     originCity: query.originCity,
+  //     destinationZip: query.destinationZip,
+  //     destinationCity: query.destinationCity
+  //   }).run(conn, (err, resp) => {
+  //     res.json({err, resp});
+  //   });
+  // });
 });
 
-// router.post('/make-request', (req, res, next) => {
-//   getConn.then((conn) => {
-//     r.table('rides').insert({
-//       startPoint: r.point(+(req.body.startLng), +(req.body.startLat)),
-//       endPoint: r.point(+(req.body.endLng), +(req.body.endLat)),
-//       wouldDrive: stringToBool(req.body.wouldDrive),
-//       flexible: stringToBool(req.body.flexible),
-//       polypath: req.body.polypath
-//     }).run(conn, (err, resp) => {
-//       res.json({err, resp});
-//     });
-//   });
-// });
+
+router.post('/post-ride', (req, res, next) => {
+  const query = req.body;
+  const polyVertices = query.containmentPolygon.map((v) => {
+    return [v.lng, v.lat];
+  });
+
+  getConn.then((conn) => {
+    r.table('rides').insert({
+      containmentPolygon: r.polygon(r.args(polyVertices)),
+      destinationPoint: r.point(+(query.destinationPoint.lng), +(query.destinationPoint.lat)),
+      originPoint: r.point(+(query.originPoint.lng), +(query.originPoint.lat)),
+      encodedPolyline: query.encodedPolyline,
+      originZip: query.originZip,
+      originCity: query.originCity,
+      destinationZip: query.destinationZip,
+      destinationCity: query.destinationCity
+    }).run(conn, (err, resp) => {
+      res.json({err, resp});
+    });
+  });
+});
 
 router.get('/recent', (req, res, next) => {
   getConn.then((conn) => {
@@ -36,7 +61,7 @@ router.get('/recent', (req, res, next) => {
       if (err) { return res.json({err}); }
       cursor.toArray((err, results) => {
         if (err) { return res.json({err}); }
-        res.json(results);
+        res.json({err, results});
       });
     });
   });

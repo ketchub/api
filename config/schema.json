@@ -9,9 +9,12 @@
   {
     "name": "rides",
     "indices": [
-      ["startPoint", {"geo":true}],
-      ["endPoint", {"geo":true}],
-      ["wouldDrive"],
+      ["origin", {"geo":true}],
+      ["destination", {"geo":true}],
+      ["originZip"],
+      ["originCity"],
+      ["destinationZip"],
+      ["destinationCity"],
       ["flexible"]
     ]
   }
