@@ -9,13 +9,13 @@
   {
     "name": "rides",
     "indices": [
-      ["origin", {"geo":true}],
-      ["destination", {"geo":true}],
+      ["containmentPolygon", {"geo":true}],
+      ["originPoint", {"geo":true}],
+      ["destinationPoint", {"geo":true}],
       ["originZip"],
       ["originCity"],
       ["destinationZip"],
-      ["destinationCity"],
-      ["flexible"]
+      ["destinationCity"]
     ]
   }
 ]

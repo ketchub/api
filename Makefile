@@ -47,8 +47,11 @@ test: dev-setup
 dev-setupdb: export NODE_ENV = development
 dev-setupdb:
 	docker exec -it catchalongapi_api1_1 env TERM=xterm node ./bin/db.js
-	docker exec -it catchalongapi_api1_1 env TERM=xterm node ./bin/db-seeder.js
+	make dev-dbseed
 
+dev-dbseed: export NODE_ENV = development
+dev-dbseed:
+	docker exec -it catchalongapi_api1_1 env TERM=xterm node ./bin/db-seeder.js
 
 # nginx:
 # 	docker-compose -f _docker/docker-compose.yml run proxyway

@@ -18,11 +18,19 @@ getConn.then((conn) => {
   });
 
   function addRecord(data, done) {
+    // @todo make this use actual insert code from the application
+    const polyVertices = data.containmentPolygon.map((v) => {
+      return [v.lng, v.lat];
+    });
     r.table('rides').insert({
-      startPoint: r.point(data.startLng, data.startLat),
-      endPoint: r.point(data.endLng, data.endLat),
-      wouldDrive: data.wouldDrive,
-      flexible: data.flexible
+      containmentPolygon: r.polygon(r.args(polyVertices)),
+      destinationPoint: r.point(+(data.destinationPoint.lng), +(data.destinationPoint.lat)),
+      originPoint: r.point(+(data.originPoint.lng), +(data.originPoint.lat)),
+      encodedPolyline: data.encodedPolyline,
+      originZip: data.originZip,
+      originCity: data.originCity,
+      destinationZip: data.destinationZip,
+      destinationCity: data.destinationCity
     }).run(conn, done);
   }
 });
