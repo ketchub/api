@@ -12,6 +12,7 @@
       ["containmentPolygon", {"geo":true}],
       ["originPoint", {"geo":true}],
       ["destinationPoint", {"geo":true}],
+      ["originDestinationMulti", {"geo":true, "multi":true}],
       ["originZip"],
       ["originCity"],
       ["destinationZip"],
