@@ -4,6 +4,10 @@ export HTTPS_PORT ?= 4434
 # Settings for this Makefile
 SHELL = /bin/bash
 
+BOX_1 = 162.243.2.183
+BOX_2 = 162.243.32.12
+BOX_3 = 192.241.183.201
+
 ################################################################################
 # Development related
 ################################################################################
@@ -13,6 +17,7 @@ dev: dev-setup
 	docker-compose -f _docker/docker-compose.yml logs -f; true && \
 	make dev-halt
 
+dev-halt: export NODE_ENV = development
 dev-halt:
 	docker-compose -f _docker/docker-compose.yml down
 
@@ -29,11 +34,23 @@ dev-npm-install:
 	docker build -t $(CONTAINER_NAME) -f _docker/Dockerfile .
 	docker run -it --rm -v $$PWD:/src $(CONTAINER_NAME) npm install && npm rebuild
 	docker rmi $(CONTAINER_NAME)
+	scp api-image.tar root@162.243.2.183:/tmp
 
 ################################################################################
 # Production related
 ################################################################################
-
+deploy:
+	docker rmi ketch-deploy/api; true
+	docker build -f _deploy/Dockerfile -t ketch-deploy/api .
+	docker save ketch-deploy/api > ./api-image.tar
+	docker rmi ketch-deploy/api; true
+	scp api-image.tar root@$(BOX_1):/tmp
+	scp api-image.tar root@$(BOX_2):/tmp
+	scp api-image.tar root@$(BOX_3):/tmp
+	@ssh root@$(BOX_1) 'bash -s' < _deploy/remotes.sh
+	@ssh root@$(BOX_2) 'bash -s' < _deploy/remotes.sh
+	@ssh root@$(BOX_3) 'bash -s' < _deploy/remotes.sh
+	rm api-image.tar
 
 ################################################################################
 # Test related
@@ -47,7 +64,7 @@ test: dev-setup
 dev-setupdb: export NODE_ENV = development
 dev-setupdb:
 	docker exec -it catchalongapi_api1_1 env TERM=xterm node ./bin/db.js
-	make dev-dbseed
+	#make dev-dbseed
 
 dev-dbseed: export NODE_ENV = development
 dev-dbseed:

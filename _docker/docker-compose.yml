@@ -15,8 +15,8 @@ services:
       - apinet
     depends_on:
       - api1
-      - api2
-      - api3
+      # - api2
+      # - api3
 
   api1:
     build:
@@ -34,46 +34,46 @@ services:
       #NODE_ENV: development
     depends_on:
       - rdb1
-      - rdb2
-      - rdb3
+      # - rdb2
+      # - rdb3
 
-  api2:
-    build:
-      context: ../
-      dockerfile: _docker/Dockerfile
-    image: catchalong-api
-    volumes:
-      - ./../:/src
-    networks:
-      - apinet
-    command: "./node_modules/.bin/pm2-docker /src/pm2process.yml"
-    environment:
-      RETHINK_HOST: rdb2
-      NODE_ENV: "${NODE_ENV}"
-      #NODE_ENV: development
-    depends_on:
-      - rdb1
-      - rdb2
-      - rdb3
-
-  api3:
-    build:
-      context: ../
-      dockerfile: _docker/Dockerfile
-    image: catchalong-api
-    volumes:
-      - ./../:/src
-    networks:
-      - apinet
-    command: "./node_modules/.bin/pm2-docker /src/pm2process.yml"
-    environment:
-      RETHINK_HOST: rdb3
-      NODE_ENV: "${NODE_ENV}"
-      #NODE_ENV: development
-    depends_on:
-      - rdb1
-      - rdb2
-      - rdb3
+  # api2:
+  #   build:
+  #     context: ../
+  #     dockerfile: _docker/Dockerfile
+  #   image: catchalong-api
+  #   volumes:
+  #     - ./../:/src
+  #   networks:
+  #     - apinet
+  #   command: "./node_modules/.bin/pm2-docker /src/pm2process.yml"
+  #   environment:
+  #     RETHINK_HOST: rdb2
+  #     NODE_ENV: "${NODE_ENV}"
+  #     #NODE_ENV: development
+  #   depends_on:
+  #     - rdb1
+  #     - rdb2
+  #     - rdb3
+  #
+  # api3:
+  #   build:
+  #     context: ../
+  #     dockerfile: _docker/Dockerfile
+  #   image: catchalong-api
+  #   volumes:
+  #     - ./../:/src
+  #   networks:
+  #     - apinet
+  #   command: "./node_modules/.bin/pm2-docker /src/pm2process.yml"
+  #   environment:
+  #     RETHINK_HOST: rdb3
+  #     NODE_ENV: "${NODE_ENV}"
+  #     #NODE_ENV: development
+  #   depends_on:
+  #     - rdb1
+  #     - rdb2
+  #     - rdb3
 
   # apitest:
   #   build:
@@ -108,32 +108,32 @@ services:
       - "8081:8080"
     command: "--bind all --canonical-address rdb.1 --directory /var/data/rethinkdb"
 
-  rdb2:
-    image: jlhawn/rethinkdb:2.3.5
-    volumes:
-      - ./.jlhawndata/rdb2:/var/data
-    networks:
-      apinet:
-      dbnet:
-        aliases:
-          - rdb.2
-    command: "--bind all --no-http-admin --canonical-address rdb.2 --directory /var/data/rethinkdb --join rdb.1"
-    depends_on:
-      - rdb1
-
-  rdb3:
-    image: jlhawn/rethinkdb:2.3.5
-    volumes:
-      - ./.jlhawndata/rdb3:/var/data
-    networks:
-      apinet:
-      dbnet:
-        aliases:
-          - rdb.3
-    command: "--bind all --no-http-admin --canonical-address rdb.3 --directory /var/data/rethinkdb --join rdb.2"
-    depends_on:
-      - rdb1
-      - rdb2
+  # rdb2:
+  #   image: jlhawn/rethinkdb:2.3.5
+  #   volumes:
+  #     - ./.jlhawndata/rdb2:/var/data
+  #   networks:
+  #     apinet:
+  #     dbnet:
+  #       aliases:
+  #         - rdb.2
+  #   command: "--bind all --no-http-admin --canonical-address rdb.2 --directory /var/data/rethinkdb --join rdb.1"
+  #   depends_on:
+  #     - rdb1
+  #
+  # rdb3:
+  #   image: jlhawn/rethinkdb:2.3.5
+  #   volumes:
+  #     - ./.jlhawndata/rdb3:/var/data
+  #   networks:
+  #     apinet:
+  #     dbnet:
+  #       aliases:
+  #         - rdb.3
+  #   command: "--bind all --no-http-admin --canonical-address rdb.3 --directory /var/data/rethinkdb --join rdb.2"
+  #   depends_on:
+  #     - rdb1
+  #     - rdb2
 
 networks:
   apinet:

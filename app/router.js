@@ -8,16 +8,24 @@ const getConn = r.connect({
   port: 28015
 });
 
-console.log(`\n\n RUNNING WITH NODE_ENV: ${process.env.NODE_ENV} \n\n`);
+console.log(`\n\n RUNNING WITH NODE_ENV: ${process.env.NODE_ENV} ${process.env.RETHINK_HOST} \n\n`);
 
 module.exports = router;
 
+router.get('/testing2', (req, res, next) => {
+  res.json({testing:true, hey:'world'});
+});
+
 router.post('/search', (req, res, next) => {
   const query = req.body;
-  const polyVertices = query.containmentPolygon.map((v) => {
+  const routeLine = r.line(r.args(query.routeLine.map((pair) => {
+    return [pair.lng, pair.lat];
+  })));
+  const containmentPolygon = r.polygon(r.args(query.containmentPolygon.map((v) => {
     return [v.lng, v.lat];
-  });
-  const rqlContainmentPolygon = r.polygon(r.args(polyVertices));
+  })));
+  const tripDistance = query.tripDistance;
+
   const originPoint = r.point(+(query.originPoint.lng), +(query.originPoint.lat));
   const originRadius = r.circle(originPoint, +(query.originSearchRadius));
   const destinationPoint = r.point(+(query.destinationPoint.lng), +(query.destinationPoint.lat));
@@ -25,63 +33,92 @@ router.post('/search', (req, res, next) => {
 
   getConn.then((conn) => {
     r.table('rides')
-      // the RECORD containment poly intersects the SEARCH origin radius
-      .filter(r.row('containmentPolygon').intersects(originRadius))
-      // the RECORD origin point intersects the originRadius
-      .filter(r.row('originPoint').intersects(originRadius))
-      // the RECORD containment poly intersects the SEARCH dest radius
-      .filter(r.row('containmentPolygon').intersects(destinationRadius))
-      // the RECORD dest point intersects the SEARCH dest radius
-      // THIS IS THE KEY TO "ALONG" A ROUTE, IF WE DO NOT FILTER BY THIS
-      .filter(r.row('destinationPoint').intersects(destinationRadius))
-
-
-      // .filter(r.row('originRadius').intersects(rqlContainmentPolygon))
-      // .filter(r.row('destinationRadius').intersects(rqlContainmentPolygon))
-      // .getIntersecting(rqlContainmentPolygon, {index: 'containmentPolygon'})
-      // .filter(r.row('containmentPolygon').intersects(rqlContainmentPolygon))
-      // .filter(
-      //   r.row('originPoint').intersects(originRadius)
-      // )
-      // .filter(
-      //   r.row('destinationPoint').intersects(destinationRadius)
-      // )
-      // .pluck(
-      //   'id',
-      //   'encodedPolyline',
-      //   'originPoint',
-      //   'destinationPoint'
-      // )
-      .run(conn, (err, cursor) => {
-        if (err) { return res.json({err}); }
-        cursor.toArray((err, results) => {
-          if (err) { return res.json({err}); }
-          res.json({err, results});
+      .getIntersecting(routeLine, {index:'routeLine'})
+      // "where record's distance is >= 90% of the search trip dist"
+      .filter(r.row('tripDistance').gt(tripDistance * 0.9))
+      .filter(r.row('routeLine').intersects(originRadius))
+      .filter(r.row('routeLine').intersects(destinationRadius))
+      .map((row) => {
+        return row.merge({
+          _fromOrigin: row('originPoint').distance(originPoint),
+          _fromDestination: row('destinationPoint').distance(destinationPoint),
+          _discrep: row('originPoint').distance(originPoint).add(row('destinationPoint').distance(destinationPoint))
         });
+      })
+      .distinct()
+      .run(conn, {profile:true}, (err, cursor) => {
+        if (err) { return res.json({err}); }
+        return res.json({err, duration:cursor.profile[0]['duration(ms)'], results:cursor.value});
+        // return res.json({err, results:cursor.value, duration:cursor.profile[0]['duration(ms)']});
       });
   });
+
+  // getConn.then((conn) => {
+  //   r.table('rides')
+  //     .getIntersecting(originRadius, {index:'containmentPolygon'})
+  //     .union(
+  //       r.table('rides').getIntersecting(destinationRadius, {index:'containmentPolygon'})
+  //     )
+  //     .map((row) => {
+  //       return row.merge({
+  //         _fromOrigin: row('originPoint').distance(originPoint),
+  //         _fromDestination: row('destinationPoint').distance(destinationPoint),
+  //         _discrep: row('originPoint').distance(originPoint).add(row('destinationPoint').distance(destinationPoint))
+  //       });
+  //     })
+  //     .distinct()
+  //
+  //     // the RECORD containment poly intersects the SEARCH origin radius
+  //     // .filter(r.row('containmentPolygon').intersects(originRadius))
+  //     // // the RECORD origin point intersects the originRadius
+  //     // .filter(r.row('originPoint').intersects(originRadius))
+  //     // // the RECORD containment poly intersects the SEARCH dest radius
+  //     // .filter(r.row('containmentPolygon').intersects(destinationRadius))
+  //     // // the RECORD dest point intersects the SEARCH dest radius
+  //     // // THIS IS THE KEY TO "ALONG" A ROUTE, IF WE DO NOT FILTER BY THIS
+  //     // .filter(r.row('destinationPoint').intersects(destinationRadius))
+  //
+  //
+  //
+  //
+  //     .run(conn, {profile:true}, (err, cursor) => {
+  //       if (err) { return res.json({err}); }
+  //       // when profile:true, cursor is a response
+  //       return res.json({err, results:cursor.value, queryDuration:cursor.profile[0]['duration(ms)']});
+  //
+  //       // cursor.toArray((err, results) => {
+  //       //   if (err) { return res.json({err}); }
+  //       //   res.json({err, results});
+  //       // });
+  //     });
+  // });
 });
 
 
 router.post('/post-ride', (req, res, next) => {
   const query = req.body;
-  const polyVertices = query.containmentPolygon.map((v) => {
+  const routeLine = r.line(r.args(query.routeLine.map((pair) => {
+    return [pair.lng, pair.lat];
+  })));
+  const containmentPolygon = r.polygon(r.args(query.containmentPolygon.map((v) => {
     return [v.lng, v.lat];
-  });
-
+  })));
   const originPoint = r.point(+(query.originPoint.lng), +(query.originPoint.lat));
-  const originRadius = r.circle(originPoint, +(query.originSearchRadius));
+  // const originRadius = r.circle(originPoint, +(query.originSearchRadius));
   const destinationPoint = r.point(+(query.destinationPoint.lng), +(query.destinationPoint.lat));
-  const destinationRadius = r.circle(destinationPoint, +(query.destinationSearchRadius));
+  // const destinationRadius = r.circle(destinationPoint, +(query.destinationSearchRadius));
+
 
   getConn.then((conn) => {
     r.table('rides').insert({
-      containmentPolygon: r.polygon(r.args(polyVertices)),
-      originPoint: originPoint,
-      originRadius: originRadius,
-      destinationPoint: destinationPoint,
-      destinationRadius,
+      routeLine,
+      containmentPolygon,
+      originPoint,
+      // originRadius: originRadius,
+      destinationPoint,
+      // destinationRadius,
       // originDestinationMulti: [originPoint, destinationPoint],
+      tripDistance: query.tripDistance,
       encodedPolyline: query.encodedPolyline,
       originZip: query.originZip,
       originCity: query.originCity,

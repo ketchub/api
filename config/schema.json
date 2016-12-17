@@ -10,9 +10,10 @@
     "name": "rides",
     "indices": [
       ["containmentPolygon", {"geo":true}],
+      ["routeLine", {"geo":true, "multi":true}],
       ["originPoint", {"geo":true}],
       ["destinationPoint", {"geo":true}],
-      ["originDestinationMulti", {"geo":true, "multi":true}],
+      ["tripDistance"],
       ["originZip"],
       ["originCity"],
       ["destinationZip"],
