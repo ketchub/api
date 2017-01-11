@@ -10,15 +10,20 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "chai": "^3.5.0",
+    "chai": "3.5.0",
     "mocha": "3.1.2"
   },
   "dependencies": {
-    "async": "^2.1.4",
+    "@mapbox/polyline": "^0.2.0",
+    "async": "2.1.4",
+    "bcrypt": "^1.0.2",
     "body-parser": "1.15.2",
     "express": "4.14.0",
     "lodash": "4.16.4",
+    "passport": "^0.3.2",
+    "passport-jwt": "^2.2.1",
     "pm2": "2.0.18",
+    "request": "2.79.0",
     "rethinkdb": "2.3.3"
   }
 }

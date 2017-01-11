@@ -1,23 +1,23 @@
 [
   {
-    "name": "accounts",
+    "tableName": "accounts",
     "options": {"primaryKey": "email"},
     "indices": [
-      ["id"]
+      {"indexName": "id"}
     ]
   },
   {
-    "name": "rides",
+    "tableName": "rides",
     "indices": [
-      ["containmentPolygon", {"geo":true}],
-      ["routeLine", {"geo":true, "multi":true}],
-      ["originPoint", {"geo":true}],
-      ["destinationPoint", {"geo":true}],
-      ["tripDistance"],
-      ["originZip"],
-      ["originCity"],
-      ["destinationZip"],
-      ["destinationCity"]
+      {"indexName": "containmentPolygon", "opts": {"geo":true}},
+      {"indexName": "routeLine", "opts": {"geo":true, "multi":true}},
+      {"indexName": "originPoint", "opts": {"geo":true}},
+      {"indexName": "destinationPoint", "opts": {"geo":true}},
+      {"indexName": "tripDistance"},
+      {"indexName": "originZip"},
+      {"indexName": "originCity"},
+      {"indexName": "destinationZip"},
+      {"indexName": "destinationCity"}
     ]
   }
 ]

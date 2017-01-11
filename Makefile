@@ -60,15 +60,19 @@ test: dev-setup
 	docker-compose -f _docker/docker-compose.yml up -d
 	docker exec -it catchalongapi_apitest_1 ./node_modules/.bin/mocha
 
-## Exec a bin script in ONE of the containers
-dev-setupdb: export NODE_ENV = development
-dev-setupdb:
+# Reset database SCHEMA
+dev-dbreset: export NODE_ENV = development
+dev-dbreset:
 	docker exec -it catchalongapi_api1_1 env TERM=xterm node ./bin/db.js
-	#make dev-dbseed
 
+# Seed the database
 dev-dbseed: export NODE_ENV = development
 dev-dbseed:
 	docker exec -it catchalongapi_api1_1 env TERM=xterm node ./bin/db-seeder.js
+
+dev-db-reset-and-seed:
+	make dev-dbreset
+	make dev-dbseed
 
 # nginx:
 # 	docker-compose -f _docker/docker-compose.yml run proxyway

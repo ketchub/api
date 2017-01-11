@@ -1,0 +1,13 @@
+{
+  "authentication": {
+    "secret": "SET_ME",
+    "algorithm": "HS256",
+    "issuer": "domain.com",
+    "scopes": {
+      "webui": {
+        "audience": "users",
+        "expiresIn": "60 days"
+      }
+    }
+  }
+}

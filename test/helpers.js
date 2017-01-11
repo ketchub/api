@@ -1,1 +1,1 @@
-
+require('../app/_bootstrap');

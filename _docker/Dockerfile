@@ -4,7 +4,10 @@
 FROM mhart/alpine-node:6.7.0
 
 # Use NPM2 as the process manager
-# RUN npm install pm2 -g
+RUN apk add --no-cache \
+  make \
+  python \
+  g++
 
 # Set the working directory
 WORKDIR /src
