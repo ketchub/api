@@ -9,15 +9,14 @@
   {
     "tableName": "rides",
     "indices": [
+      {"indexName": "accountId"},
+      {"indexName": "when"},
       {"indexName": "containmentPolygon", "opts": {"geo":true}},
       {"indexName": "routeLine", "opts": {"geo":true, "multi":true}},
       {"indexName": "originPoint", "opts": {"geo":true}},
       {"indexName": "destinationPoint", "opts": {"geo":true}},
       {"indexName": "tripDistance"},
-      {"indexName": "originZip"},
-      {"indexName": "originCity"},
-      {"indexName": "destinationZip"},
-      {"indexName": "destinationCity"}
+      {"indexName": "rideOrDrive"}
     ]
   }
 ]

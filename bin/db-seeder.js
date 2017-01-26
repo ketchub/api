@@ -2,10 +2,10 @@ require('../app/_bootstrap');
 const path          = ACQUIRE('path');
 const fs            = ACQUIRE('fs');
 const async         = ACQUIRE('async');
-const tripModel     = ACQUIRE('@/models/trip');
-const accountModel  = ACQUIRE('@/models/account');
+const tripModel     = ACQUIRE('#/models/trip');
+const accountModel  = ACQUIRE('#/models/account');
 const r             = ACQUIRE('rethinkdb');
-const getConnection = ACQUIRE('@/lib/db/connection');
+const getConnection = ACQUIRE('#/lib/db/connection');
 
 async.series([
   seedAccountTable,
@@ -21,14 +21,7 @@ async.series([
 function seedAccountTable(callback) {
   seeder('/account', callback).setHandler((fileName, done) => {
     accountModel.create(loadSeed(`/account/${fileName}`), (err, resp) => {
-      if (err) {
-        if (err.message.indexOf('Duplicate') === -1) {
-          return done(err);
-        }
-        console.log(`-- Account already existed from ${fileName}`);
-        return done();
-      }
-      console.log(`-- Account seeded from ${fileName}`);
+      if (err) { return done(err); }
       done();
     });
   }).invoke();
@@ -39,20 +32,9 @@ function seedAccountTable(callback) {
  */
 function seedTripTable(callback) {
   seeder('/trip', callback).setHandler((fileName, done) => {
-    // get a random accountId from the database to use
-    getConnection((err, conn) => {
+    tripModel.postRide(loadSeed(`/trip/${fileName}`), (err, resp) => {
       if (err) { return done(err); }
-      r.table('accounts').sample(1).nth(0).run(conn, (err, accountResp) => {
-        conn.close();
-        if (err) { return done(err); }
-        const tripData = loadSeed(`/trip/${fileName}`);
-        tripData.accountId = accountResp.id;
-        tripModel.postRide(tripData, (err, resp) => {
-          if (err) { return done(err); }
-          console.log(`-- Trip seeded from ${fileName}`);
-          done();
-        });
-      });
+      done();
     });
   }).invoke();
 }

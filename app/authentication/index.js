@@ -38,7 +38,8 @@ passport.use(new StrategyJwt({
 function check(req, res, next) {
   return passport.authenticate('jwt', {session:false}, (err, requestToken) => {
     if (err) { return next(err); }
-    if (!requestToken) { return next(new Error('Invalid token.')); }
+    if (!requestToken) { return next(new Error('Authentication token missing.')); }
+    if (!_.get(requestToken, 'accountId')) { return next(new Error('Malformed token.')); }
     req.requestToken = requestToken;
     next();
   })(req, res, next);

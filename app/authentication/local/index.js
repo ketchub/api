@@ -35,7 +35,6 @@ passport.use(new CustomLocalStrategy({
  */
 router.post('/local', passport.authenticate('local', {session:false}),
   (req, res) => {
-    console.log('here with', req.user);
     res.json({token:tokenizer(tokenizer.SCOPES.WEBUI, req.user)});
   }
 );

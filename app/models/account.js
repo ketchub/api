@@ -13,18 +13,18 @@ module.exports.loadByEmail  = _loadByEmail;
  */
 function _create(data, done) {
   const { email, password, firstName, lastName, image } = data;
+  const payload = {
+    id: r.uuid(),
+    email, password, firstName, lastName, image
+  };
+
+  if (data.id) { payload.id = data.id; }
 
   getConnection((err, conn) => {
     if (err) { return done(err); }
-    r.table(TABLE_NAME).insert({
-      id: r.uuid(),
-      email,
-      password,
-      firstName,
-      lastName,
-      image
-    }, {returnChanges:true, conflict:"error"})
+    r.table(TABLE_NAME).insert(payload, {returnChanges:true, conflict:"error"})
       .run(conn, (err, reply) => {
+        conn.close();
         if (err) { return done(err); }
         if (reply && reply.errors) {
           return done(new Error(reply.first_error));
@@ -46,10 +46,14 @@ function _create(data, done) {
 function _loadById(id, done) {
   getConnection((err, conn) => {
     if (err) { return done(err); }
-    r.table(TABLE_NAME).getAll(id, {index:'id'}).nth(0)
+    r.table(TABLE_NAME).getAll(id, {index:'id'}).limit(1).coerceTo('array')
       .run(conn, (err, reply) => {
-        done(err, reply);
         conn.close();
+        console.log('\n LOADING ACCOUNT BY ID: \n', err, reply);
+        if (!reply[0]) {
+          return done(new Error('Account does not exist.'));
+        }
+        done(err, reply[0]);
       });
   });
 }
@@ -65,8 +69,8 @@ function _loadByEmail(email, done) {
     if (err) { return done(err); }
     r.table(TABLE_NAME).get(email)
       .run(conn, (err, reply) => {
-        done(err, reply);
         conn.close();
+        done(err, reply);
       });
   });
 }

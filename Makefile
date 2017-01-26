@@ -61,18 +61,23 @@ test: dev-setup
 	docker exec -it catchalongapi_apitest_1 ./node_modules/.bin/mocha
 
 # Reset database SCHEMA
-dev-dbreset: export NODE_ENV = development
-dev-dbreset:
+dev-db-reset: export NODE_ENV = development
+dev-db-reset:
 	docker exec -it catchalongapi_api1_1 env TERM=xterm node ./bin/db.js
 
 # Seed the database
-dev-dbseed: export NODE_ENV = development
-dev-dbseed:
+dev-db-seed: export NODE_ENV = development
+dev-db-seed:
 	docker exec -it catchalongapi_api1_1 env TERM=xterm node ./bin/db-seeder.js
 
-dev-db-reset-and-seed:
-	make dev-dbreset
-	make dev-dbseed
+resetdb:
+	make dev-db-reset
+	make dev-db-seed
+
+# @todo: this is during INITIAL development; once seed data is in place this
+# should never be used!
+clean-seeds:
+	rm -rf ./config/seeds/trip
 
 # nginx:
 # 	docker-compose -f _docker/docker-compose.yml run proxyway

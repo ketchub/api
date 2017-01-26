@@ -1,4 +1,4 @@
 module.exports = {
   account: require('./account'),
-  rides: require('./rides')
+  rides: require('./trips')
 };

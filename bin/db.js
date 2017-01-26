@@ -2,7 +2,7 @@ require('../app/_bootstrap');
 const r             = ACQUIRE('rethinkdb');
 const async         = ACQUIRE('async');
 const schema        = ACQUIRE('../config/schema.json');
-const getConnection = ACQUIRE('@/lib/db/connection');
+const getConnection = ACQUIRE('#/lib/db/connection');
 const dbName        = process.env.NODE_ENV;
 
 getConnection((err, conn) => {

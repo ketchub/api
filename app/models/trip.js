@@ -1,8 +1,40 @@
+const _                 = ACQUIRE('lodash');
 const r                 = ACQUIRE('rethinkdb');
+const moment            = ACQUIRE('moment');
 const getConnection     = ACQUIRE('#/lib/db/connection');
 const mapboxPolyline    = ACQUIRE('@mapbox/polyline');
 module.exports.search   = _search;
 module.exports.postRide = _postRide;
+module.exports.list  = _list;
+
+function _list(params, done) {
+  const { accountId } = params;
+  const chronology = _.get(params, 'query.chronology', null);
+
+  getConnection((err, conn) => {
+    if (err) { return done(err); }
+    let rdbQuery = r.table('rides').getAll(accountId, {index:'accountId'});
+
+    if (chronology && chronology === 'upcoming') {
+      rdbQuery = rdbQuery
+        .filter(r.row('when').gt(r.now()))
+        .orderBy(r.asc('when'));
+    }
+    if (chronology && chronology === 'previous') {
+      rdbQuery = rdbQuery
+        .filter(r.row('when').lt(r.now()))
+        .orderBy(r.desc('when'));
+    }
+
+    rdbQuery
+      .coerceTo('array')
+      .run(conn, (err, response) => {
+        if (err) { return done(err); }
+        conn.close();
+        done(null, response);
+      });
+  });
+}
 
 /**
  * Issue search data to Rethink.
@@ -19,7 +51,12 @@ function _search(data, done) {
   const originRadius = makeOriginRadius(originPoint, data);
   const destinationPoint = makeDestinationPoint(data);
   const destinationRadius = makeDestinationRadius(destinationPoint, data);
-  const pluck = ['_discrep', '_fromOrigin', '_fromDestination', '_account', 'encodedPolyline', 'id', 'tripDistance', 'originCity', 'destinationCity', 'accountId'];
+  const pluck = [
+    'id', 'when', 'encodedPolyline', 'tripDistance', 'originAddress',
+    'destinationAddress',
+    '_discrep', '_fromOrigin', '_fromDestination',
+    '_account',
+  ];
 
   getConnection((err, conn) => {
     if (err) { return done(err); }
@@ -40,7 +77,7 @@ function _search(data, done) {
           _discrep: row('originPoint').distance(originPoint).add(row('destinationPoint').distance(destinationPoint)),
           _account: r.table('accounts').getAll(
             row('accountId'), {index:'id'}
-          ).nth(0).without(['email'])
+          ).without(['email', 'password']).nth(0) // this can cause reql errors (not particularly safe)
         });
       })
       .pluck(pluck)
@@ -57,7 +94,6 @@ function _search(data, done) {
   });
 }
 
-
 /**
  * Post a ride request.
  * @param  {Object}   data Ride details
@@ -65,31 +101,57 @@ function _search(data, done) {
  * @return {void}
  */
 function _postRide(data, done) {
+  const accountId = data.accountId;
   const routeLine = makeRouteLine(data);
   const containmentPolygon = makeContainmentPolygon(data);
   const originPoint = makeOriginPoint(data);
   const destinationPoint = makeDestinationPoint(data);
+  const when = makeWhen(data);
+  const payload = {
+    accountId,
+    routeLine,
+    containmentPolygon,
+    originPoint,
+    destinationPoint,
+    when,
+    tripDistance: +(data.tripDistance),
+    encodedPolyline: data.encodedPolyline,
+    originAddress: data.originAddress,
+    destinationAddress: data.destinationAddress,
+    rideOrDrive: data.rideOrDrive ? data.rideOrDrive : 'RIDE',
+    seatCapacity: data.seatCapacity ? +(data.seatCapacity) : null
+  };
+
+  if (data.id) { payload.id = data.id; }
 
   getConnection((err, conn) => {
     if (err) { return done(err); }
-    r.table('rides').insert({
-      routeLine,
-      containmentPolygon,
-      originPoint,
-      destinationPoint,
-      tripDistance: +(data.tripDistance),
-      encodedPolyline: data.encodedPolyline,
-      originZip: +(data.originZip),
-      originCity: data.originCity,
-      destinationZip: +(data.destinationZip),
-      destinationCity: data.destinationCity,
-      accountId: data.accountId
-    }).run(conn, (err, resp) => {
-      if (err) { return done(err); }
-      conn.close();
-      done(null, {err, resp});
-    });
+    r.table('rides').insert(payload, {returnChanges:true, conflict:"error"})
+      .run(conn, (err, reply) => {
+        conn.close();
+        if (err) { return done(err); }
+        if (reply && reply.errors) {
+          return done(new Error(reply.first_error));
+        }
+        if (reply && reply.changes && !reply.changes.length) {
+          return done(new Error('Error occurred, trip not created.'));
+        }
+        done(null, reply.changes[0].new_val);
+      });
   });
+}
+
+function makeWhen(data) {
+  const when = data.when ? moment.utc(data.when) : moment.utc();
+  return r.time(
+    when.year(),
+    when.month() + 1, // month is 0 offset
+    when.date(),
+    when.hour(),
+    when.minute(),
+    0, // seconds
+    'Z'
+  );
 }
 
 function makeRouteLine(data) {
