@@ -5,6 +5,7 @@ const app         = express();
 const bodyParser  = ACQUIRE('body-parser');
 const authentication = ACQUIRE('#/authentication');
 const authenticationLocal = ACQUIRE('#/authentication/local');
+const authenticationFacebook = ACQUIRE('#/authentication/facebook');
 
 console.log(
   `\n\n RUNNING WITH NODE_ENV: ${process.env.NODE_ENV} ${process.env.RETHINK_HOST} \n\n`
@@ -16,10 +17,11 @@ app.use(bodyParser.raw());
 app.use(bodyParser.urlencoded({extended:true}));
 
 // Setup authentication
-app.use('/auth', [
-  authenticationLocal.router
-]);
 app.use(authentication.passport.initialize());
+app.use('/auth', [
+  authenticationLocal.router,
+  authenticationFacebook.router
+]);
 
 // Bind all the routers
 _.each(ACQUIRE('#/routes'), (router) => {

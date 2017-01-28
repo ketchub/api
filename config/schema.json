@@ -1,9 +1,9 @@
 [
   {
     "tableName": "accounts",
-    "options": {"primaryKey": "email"},
     "indices": [
-      {"indexName": "id"}
+      {"indexName": "email"},
+      {"indexName": "facebookId"}
     ]
   },
   {

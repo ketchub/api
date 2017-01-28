@@ -77,7 +77,8 @@ resetdb:
 # @todo: this is during INITIAL development; once seed data is in place this
 # should never be used!
 clean-seeds:
-	rm -rf ./config/seeds/trip
+	rm -rf ./config/seeds/trip/*
+	rm -rf ./config/seeds/account/*
 
 # nginx:
 # 	docker-compose -f _docker/docker-compose.yml run proxyway

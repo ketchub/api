@@ -1,4 +1,10 @@
 {
+  "services": {
+    "facebook": {
+      "appID": "246429675799775",
+      "secret": "e9453935baec195346cc0173a00fa080"
+    }
+  },
   "authentication": {
     "secret": "SET_ME",
     "algorithm": "HS256",

@@ -32,6 +32,8 @@ services:
       RETHINK_HOST: rdb1
       NODE_ENV: "${NODE_ENV}"
       #NODE_ENV: development
+    # env_file:
+    #   - ../aws-creds.ignore.env
     depends_on:
       - rdb1
       # - rdb2

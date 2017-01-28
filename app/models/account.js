@@ -1,21 +1,45 @@
-const r                     = ACQUIRE('rethinkdb');
-const getConnection         = ACQUIRE('#/lib/db/connection');
-const TABLE_NAME            = 'accounts';
-module.exports.create       = _create;
-module.exports.loadById     = _loadById;
-module.exports.loadByEmail  = _loadByEmail;
+const r                         = ACQUIRE('rethinkdb');
+const getConnection             = ACQUIRE('#/lib/db/connection');
+const TABLE_NAME                = 'accounts';
+module.exports = {
+  create: _create,
+  loadById: _loadById,
+  loadByEmail: _loadByEmail,
+  loadByFacebookId: _loadByFacebookId,
+  setPhoneValidationCode: _setPhoneValidationCode
+};
 
 /**
  * Create an account.
+ * @todo: remember that email/phone will need to be REVALIDATED if they ever
+ * change once validated first time.
  * @param  {Object}   data Account data info
  * @param  {Function} done Callback
  * @return {void}
  */
 function _create(data, done) {
-  const { email, password, firstName, lastName, image } = data;
+  const {
+    email,
+    password,
+    firstName,
+    lastName,
+    phone,
+    image,
+    facebookId,
+    facebookAccessToken
+  } = data;
+
   const payload = {
-    id: r.uuid(),
-    email, password, firstName, lastName, image
+    email: email ? email : null,
+    emailValidated: false,
+    password: password ? password : null,
+    firstName: firstName ? firstName : null,
+    lastName: lastName ? lastName : null,
+    image: image ? image : null,
+    facebookId: facebookId ? facebookId : null,
+    facebookAccessToken: facebookAccessToken ? facebookAccessToken : null,
+    phone: phone ? phone : null,
+    phoneValidated: false
   };
 
   if (data.id) { payload.id = data.id; }
@@ -46,14 +70,15 @@ function _create(data, done) {
 function _loadById(id, done) {
   getConnection((err, conn) => {
     if (err) { return done(err); }
-    r.table(TABLE_NAME).getAll(id, {index:'id'}).limit(1).coerceTo('array')
+    r.table(TABLE_NAME).get(id)
+    // r.table(TABLE_NAME).getAll(id, {index:'id'}).limit(1).coerceTo('array')
       .run(conn, (err, reply) => {
         conn.close();
-        console.log('\n LOADING ACCOUNT BY ID: \n', err, reply);
-        if (!reply[0]) {
-          return done(new Error('Account does not exist.'));
+        if (!reply) {
+          // @todo: not-so-descriptive error message
+          return done(new Error('Could not find account by id.'));
         }
-        done(err, reply[0]);
+        done(err, reply);
       });
   });
 }
@@ -67,7 +92,43 @@ function _loadById(id, done) {
 function _loadByEmail(email, done) {
   getConnection((err, conn) => {
     if (err) { return done(err); }
-    r.table(TABLE_NAME).get(email)
+    r.table(TABLE_NAME).getAll(email, {index: 'email'}).limit(1).coerceTo('array')
+    // r.table(TABLE_NAME).get(email)
+      .run(conn, (err, reply) => {
+        conn.close();
+        if (!reply[0]) {
+          // @todo: not-so-descriptive error message
+          return done(new Error('Could not find account by email.'));
+        }
+        done(err, reply[0]);
+      });
+  });
+}
+
+/**
+ * Retrieve account record by facebook id.
+ * @param  {string}   id   Facebook identifier
+ * @param  {function} done Callback
+ * @return {void}
+ */
+function _loadByFacebookId(id, done) {
+  getConnection((err, conn) => {
+    if (err) { return done(err); }
+    r.table(TABLE_NAME).getAll(id, {index:'facebookId'}).limit(1).coerceTo('array')
+      .run(conn, (err, reply) => {
+        conn.close();
+        if (!reply[0]) {
+          return done(new Error('Account does not exist.'));
+        }
+        done(err, reply[0]);
+      });
+  });
+}
+
+function _setPhoneValidationCode(id, phoneValidationCode, done) {
+  getConnection((err, conn) => {
+    if (err) { return done(err); }
+    r.table(TABLE_NAME).get(id).update({phoneValidationCode})
       .run(conn, (err, reply) => {
         conn.close();
         done(err, reply);
