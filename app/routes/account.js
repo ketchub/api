@@ -62,12 +62,12 @@ function hashPassword(plainTextPassword, done) {
   });
 }
 
-router.get('/verify-phone-request', authentication.check, (req, res, next) => {
+router.get('/send-phone-verification', authentication.check, (req, res, next) => {
   accountModel.loadById(req.requestToken.accountId, (err, userObj) => {
     if (err) { return res.json({err}); }
     const jobs = ACQUIRE('#/lib/jobs');
     const crypto = ACQUIRE('crypto');
-    const code = crypto.randomBytes(20).toString('hex').substr(0, 7);
+    const code = crypto.randomBytes(20).toString('hex').substr(0, 5);
 
     // @todo: update user record in database with this code...
     accountModel.setPhoneValidationCode(userObj.id, code, (err, vReply) => {

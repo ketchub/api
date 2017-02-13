@@ -125,6 +125,13 @@ function _loadByFacebookId(id, done) {
   });
 }
 
+/**
+ * Set phone validation code (this does *not* set that the phone # is verified,
+ * simply sets the validation code being forwarded to AWS).
+ * @param {[type]}   id                  [description]
+ * @param {[type]}   phoneValidationCode [description]
+ * @param {Function} done                [description]
+ */
 function _setPhoneValidationCode(id, phoneValidationCode, done) {
   getConnection((err, conn) => {
     if (err) { return done(err); }
