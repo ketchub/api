@@ -6,7 +6,8 @@ module.exports = {
   loadById: _loadById,
   loadByEmail: _loadByEmail,
   loadByFacebookId: _loadByFacebookId,
-  setPhoneValidationCode: _setPhoneValidationCode
+  setPhoneValidationCode: _setPhoneValidationCode,
+  updateById: _updateById
 };
 
 /**
@@ -136,6 +137,25 @@ function _setPhoneValidationCode(id, phoneValidationCode, done) {
   getConnection((err, conn) => {
     if (err) { return done(err); }
     r.table(TABLE_NAME).get(id).update({phoneValidationCode})
+      .run(conn, (err, reply) => {
+        conn.close();
+        done(err, reply);
+      });
+  });
+}
+
+/**
+ * @todo: just injecting the payload into the document willy nilly is
+ * entirely too permissive; run validation checks on this!
+ * @param  {string}   id      Document UUID
+ * @param  {Object}   payload {k:v} object to merge
+ * @param  {Function} done    onComplete Callback
+ * @return {void}
+ */
+function _updateById(id, payload, done) {
+  getConnection((err, conn) => {
+    if (err) { return done(err); }
+    r.table(TABLE_NAME).get(id).update(payload)
       .run(conn, (err, reply) => {
         conn.close();
         done(err, reply);

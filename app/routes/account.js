@@ -35,6 +35,11 @@ router.post('/', (req, res, next) => {
   });
 });
 
+/**
+ * Get a user's account details (based on the JWT passed via authorization
+ * headers).
+ * @type {[type]}
+ */
 router.get('/', authentication.check, ( req, res, next ) => {
   accountModel.loadById(req.requestToken.accountId, (err, userObj) => {
     if (err) { return next(err); }
@@ -52,15 +57,22 @@ router.get('/', authentication.check, ( req, res, next ) => {
   });
 });
 
-function hashPassword(plainTextPassword, done) {
-  bcrypt.genSalt(10, (err, salt) => {
-    if (err) { return done(err); }
-    bcrypt.hash(plainTextPassword, salt, (err, hashed) => {
-      if (err) { return done(err); }
-      done(null, hashed);
-    });
-  });
-}
+/**
+ * Update the current user account.
+ * @todo: per-field validation on all updates need to happen!
+ * @type {Boolean}
+ */
+router.put('/', authentication.check, ( req, res, next ) => {
+  const payload = req.body;
+
+  accountModel.updateById(
+    req.requestToken.accountId,
+    payload,
+    (err, resp) => {
+      res.json({err, resp});
+    }
+  );
+});
 
 router.get('/send-phone-verification', authentication.check, (req, res, next) => {
   accountModel.loadById(req.requestToken.accountId, (err, userObj) => {
@@ -71,6 +83,8 @@ router.get('/send-phone-verification', authentication.check, (req, res, next) =>
 
     // @todo: update user record in database with this code...
     accountModel.setPhoneValidationCode(userObj.id, code, (err, vReply) => {
+      if (err) { return res.json({err}); }
+
       jobs.snsTextMessage({
         type: 'VERIFY_PHONE_REQUEST',
         phone: userObj.phone,
@@ -81,3 +95,13 @@ router.get('/send-phone-verification', authentication.check, (req, res, next) =>
     });
   });
 });
+
+function hashPassword(plainTextPassword, done) {
+  bcrypt.genSalt(10, (err, salt) => {
+    if (err) { return done(err); }
+    bcrypt.hash(plainTextPassword, salt, (err, hashed) => {
+      if (err) { return done(err); }
+      done(null, hashed);
+    });
+  });
+}
