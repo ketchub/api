@@ -4,6 +4,7 @@ const router = ACQUIRE('express').Router();
 const accountModel = ACQUIRE('#/models/account');
 const FacebookStrategy = ACQUIRE('passport-facebook').Strategy;
 const request = ACQUIRE('request');
+const spawnJob = ACQUIRE('#/lib/jobs');
 const writeSeedFile   = ACQUIRE('#/util/writeSeedFile');
 
 module.exports = { router };
@@ -28,7 +29,6 @@ passport.use(new FacebookStrategy({
     'cover'
   ]
 }, function(accessToken, refreshToken, profile, cb) {
-  console.log('FB LOGIN WITH:', profile._json);
   accountModel.loadByFacebookId(profile._json.id, (err, record) => {
     if (err) { // assume user hasn't created account yet, so set one up!
       request.get({
@@ -47,18 +47,25 @@ passport.use(new FacebookStrategy({
           image: pictureResp.data.url,
           facebookAccessToken: accessToken
         };
-        console.log('facebook api resp: ', payload, profile._json);
 
         accountModel.create(payload, (err, record) => {
           if (err) { return cb(err); }
-          cb(null, record);
+          // Kick off the syncFbFriends job *THEN* invoke the callback
+          spawnJob(spawnJob.types.SYNC_FB_FRIENDS, {
+            accountId: record.id,
+            facebookId: record.facebookId,
+            facebookAccessToken: record.facebookAccessToken
+          }, (err, reply) => {
+            if (err) { return cb(err); }
+            cb(null, record);
 
-          // @todo: make this configurable
-          writeSeedFile('account', record, (err) => {
-            if (err) {
-              return console.log('FAILED WRITIN FACEBOOK ACCOUNT SEED');
-            }
-            console.log('Facebook account seed created');
+            // @todo: make this configurable
+            writeSeedFile('account', record, (err) => {
+              if (err) {
+                return console.log('FAILED WRITING FACEBOOK ACCOUNT SEED');
+              }
+              console.log('Facebook account seed created');
+            });
           });
         });
       });
@@ -79,6 +86,6 @@ router.get('/facebook/callback',
   passport.authenticate('facebook', {session:false}),
   ( req, res ) => {
     // @todo: unhardcode this url!
-    res.redirect('https://lo.cal:4433/tokenized/' + tokenizer(tokenizer.SCOPES.WEBUI, req.user));
+    res.redirect('https://lo.cal:4433/tokenized/' + tokenizer(tokenizer.SCOPES.WEBUI, {accountId: req.user.id}));
   }
 );

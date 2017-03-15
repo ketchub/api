@@ -10,7 +10,7 @@ describe("authentication/tokenizer.test.js", () => {
   it("should generate a token", () => {
     const tokenizer = ACQUIRE('#/authentication/tokenizer');
     const token = tokenizer(tokenizer.SCOPES.WEBUI, {lorem:'ipsum',userId:'adsf-3xsd-29x3-seer'});
-    console.log(token);
+    // console.log(token);
 
     // verified
     const jsonWebToken = ACQUIRE('jsonwebtoken');

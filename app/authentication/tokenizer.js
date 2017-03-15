@@ -8,7 +8,8 @@ const SECRET = FETCH_CONFIG('authentication.secret');
 module.exports = tokenizer;
 
 function tokenizer( scope, data ) {
-  const dataWithScope = _.merge({sub:scope}, {accountId: data.id});
+  // const dataWithScope = _.merge({sub:scope}, {accountId: data.id});
+  const dataWithScope = _.merge({sub:scope}, data);
 
   return jsonWebToken.sign(
     // scope is a public claim

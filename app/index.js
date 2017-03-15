@@ -38,7 +38,6 @@ app.use((err, req, res, next) => {
   if (err) {
     return res.status(501).json({error:err.message});
   }
-
 });
 
 // Boot 'er up
