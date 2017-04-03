@@ -1,5 +1,8 @@
 script: './app/index.js'
-exec_mode: 'cluster'
-instances: -1
+node_args: ['--debug=5858']
+# in prod: 'cluster'
+exec_mode: 'fork'
+# in prod: -1
+instances: 1
 watch: ["./app/**/*.js"]
 ignore_watch: ["node_modules"]

@@ -26,6 +26,8 @@ router.get('/list', authentication.check, (req, res, next) => {
  * polyline).
  */
 router.post('/search', (req, res, next) => {
+  return res.json([]);
+  
   tripModel.search(req.body, (err, response) => {
     if (err) { return res.json({err}); }
     res.json(response);
@@ -44,13 +46,13 @@ router.post('/add', authentication.check, (req, res, next) => {
     res.json({err, response});
 
     // @todo: make this configurable
-    data.id = response.id;
-    writeSeedFile('trip', data, (err) => {
-      if (err) {
-        return console.log('\n\n-- FAILED WRITING TRIP FILE --\n\n', err);
-      }
-      console.log('Seed file generated OK.');
-    });
+    // data.id = response.id;
+    // writeSeedFile('trip', data, (err) => {
+    //   if (err) {
+    //     return console.log('\n\n-- FAILED WRITING TRIP FILE --\n\n', err);
+    //   }
+    //   console.log('Seed file generated OK.');
+    // });
   });
 });
 

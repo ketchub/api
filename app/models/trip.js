@@ -51,6 +51,7 @@ function _search(data, done) {
   const originRadius = makeOriginRadius(originPoint, data);
   const destinationPoint = makeDestinationPoint(data);
   const destinationRadius = makeDestinationRadius(destinationPoint, data);
+  const boxedRoute = makeBoxedRoute(data);
   const pluck = [
     'id', 'when', 'encodedPolyline', 'tripDistance', 'originAddress',
     'destinationAddress',
@@ -61,7 +62,8 @@ function _search(data, done) {
   getConnection((err, conn) => {
     if (err) { return done(err); }
     r.table('rides', {readMode:'outdated'})
-      .getIntersecting(containmentPolygon, {index:'containmentPolygon'})
+      .getIntersecting(boxedRoute, {index:'containmentPolygon'})
+      // .getIntersecting(containmentPolygon, {index:'containmentPolygon'})
       .filter(r.row('routeLine').intersects(routeLine))
       // do the routes intersect?
       // .getIntersecting(routeLine, {index:'routeLine'})
@@ -165,9 +167,16 @@ function makeRouteLine(data) {
 }
 
 function makeContainmentPolygon(data) {
-  return r.polygon(r.args(data.containmentPolygon.map((pair) => {
-    return [pair.lng, pair.lat];
-  })));
+  const { containmentPolygon } = data;
+  return r.polygon(
+    [containmentPolygon.east, containmentPolygon.north],
+    [containmentPolygon.east, containmentPolygon.south],
+    [containmentPolygon.west, containmentPolygon.south],
+    [containmentPolygon.west, containmentPolygon.north]
+  );
+  // return r.polygon(r.args(data.containmentPolygon.map((pair) => {
+  //   return [pair.lng, pair.lat];
+  // })));
 }
 
 function makeOriginPoint(data) {
@@ -184,4 +193,26 @@ function makeOriginRadius(originPoint, data) {
 
 function makeDestinationRadius(destinationPoint, data) {
   return r.circle(destinationPoint, +(data.destinationSearchRadius));
+}
+
+function makeBoxedRoute(data) {
+  var d = data.routeBoxes.reduce((accumulator, current) => {
+    accumulator.push([current.east, current.north]);
+    accumulator.push([current.east, current.south]);
+    accumulator.push([current.west, current.south]);
+    accumulator.push([current.west, current.north]);
+    return accumulator;
+  }, []);
+  // console.log(_.uniq(d));
+  // return d;
+
+  return r.polygon(r.args(
+    data.routeBoxes.reduce((accumulator, current) => {
+      accumulator.push([current.east, current.north]);
+      accumulator.push([current.east, current.south]);
+      accumulator.push([current.west, current.south]);
+      accumulator.push([current.west, current.north]);
+      return accumulator;
+    }, [])
+  ));
 }
